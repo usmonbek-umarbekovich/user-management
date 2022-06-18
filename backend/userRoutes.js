@@ -6,13 +6,14 @@ const {
   unblockUser,
   deleteUser,
 } = require('./userController');
+const protect = require('./middlewares/authMiddleware');
 
 const router = express.Router();
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
-router.delete('/:id', deleteUser);
-router.put('/block/:id', blockUser);
-router.put('/unblock/:id', unblockUser);
+router.delete('/:id', protect, deleteUser);
+router.put('/block/:id', protect, blockUser);
+router.put('/unblock/:id', protect, unblockUser);
 
 module.exports = router;

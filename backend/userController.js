@@ -30,9 +30,13 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (!user) {
+    req.session.error = 'User authentication failed';
     res.status(400);
     throw new Error('Invalid user data');
   }
+
+  // save user to the session
+  saveUser(req, user);
 
   res.status(200).json({
     _id: user.id,
@@ -55,6 +59,9 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     await User.findByIdAndUpdate(user.id, { lastLogin: Date.now() });
+
+    // save user to the session
+    saveUser(req, user);
 
     res.status(200).json({
       _id: user.id,
@@ -106,6 +113,13 @@ function changeStatus(status) {
       { new: true }
     );
     res.status(200).json(blockedUser);
+  });
+}
+
+function saveUser(req, user) {
+  req.session.regenerate(() => {
+    req.session.user = user;
+    req.session.success = `Authenticated as ${user.name}`;
   });
 }
 
