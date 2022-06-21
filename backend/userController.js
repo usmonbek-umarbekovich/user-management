@@ -30,18 +30,24 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (!user) {
-    req.session.error = 'User authentication failed';
     res.status(400);
     throw new Error('Invalid user data');
   }
 
-  // save user to the session
-  saveUser(req, user);
+  // save user to the session and send data
+  req.session.regenerate(err => {
+    if (err) throw new Error(err);
 
-  res.status(200).json({
-    _id: user.id,
-    name: user.name,
-    email: user.email,
+    req.session.user = {
+      _id: user.id,
+      name: user.name,
+      email: user.email,
+      status: user.status,
+      lastLogin: user.lastLogin,
+      registrationTime: user.registrationTime,
+    };
+
+    res.status(200).json(req.session.user);
   });
 });
 
@@ -60,13 +66,20 @@ const loginUser = asyncHandler(async (req, res) => {
 
     await User.findByIdAndUpdate(user.id, { lastLogin: Date.now() });
 
-    // save user to the session
-    saveUser(req, user);
+    // save user to the session and send data
+    req.session.regenerate(err => {
+      if (err) throw new Error(err);
 
-    res.status(200).json({
-      _id: user.id,
-      name: user.name,
-      email: user.email,
+      req.session.user = {
+        _id: user.id,
+        name: user.name,
+        email: user.email,
+        status: user.status,
+        lastLogin: user.lastLogin,
+        registrationTime: user.registrationTime,
+      };
+
+      res.status(200).json(req.session.user);
     });
   } else {
     res.status(400);
@@ -74,13 +87,29 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc Block user
-// @route PUT /api/users/block/:id
+const logoutUser = asyncHandler(async (req, res) => {
+  req.session.destroy(err => {
+    if (err) throw new Error(err);
+  });
+});
+
+// @desc Get the list of users
+// @route GET /api/users
+// @access Private
+const getUsers = asyncHandler(async (req, res) => {
+  const users = await User.where('_id')
+    .ne(req.session.user._id)
+    .select('_id name email status registrationTime lastLogin');
+  res.status(200).json(users);
+});
+
+// @desc Block users
+// @route PUT /api/users/block
 // @access Private
 const blockUser = changeStatus('blocked');
 
-// @desc Unblock user
-// @route PUT /api/users/unblock/:id
+// @desc Unblock users
+// @route PUT /api/users/unblock
 // @access Private
 const unblockUser = changeStatus('active');
 
@@ -94,6 +123,9 @@ const deleteUser = asyncHandler(async (req, res) => {
     throw new Error('User not found');
   }
 
+  if (user.id === req.session.user.id) {
+    logoutUser();
+  }
   await user.remove();
   res.status(200).json({ id: req.params.id });
 });
@@ -101,31 +133,19 @@ const deleteUser = asyncHandler(async (req, res) => {
 // helpers
 function changeStatus(status) {
   return asyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      res.status(400);
-      throw new Error('User not found');
-    }
+    const { selectedUsers } = req.body;
+    selectedIds = selectedUsers.map(user => user._id);
+    const report = await User.updateMany({ _id: selectedIds }, { status });
 
-    const blockedUser = await User.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
-    res.status(200).json(blockedUser);
-  });
-}
-
-function saveUser(req, user) {
-  req.session.regenerate(() => {
-    req.session.user = user;
-    req.session.success = `Authenticated as ${user.name}`;
+    res.status(200).json(report);
   });
 }
 
 module.exports = {
+  getUsers,
   registerUser,
   loginUser,
+  logoutUser,
   blockUser,
   unblockUser,
   deleteUser,
