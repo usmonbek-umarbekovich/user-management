@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useUserInfo } from '../contexts/userInfoContext';
 import Container from 'react-bootstrap/Container';
 import Navbar from 'react-bootstrap/Navbar';
@@ -8,15 +8,9 @@ import { FaSignInAlt, FaSignOutAlt, FaUser } from 'react-icons/fa';
 
 function Header() {
   const { user, logoutUser } = useUserInfo();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logoutUser();
-    navigate('/login');
-  };
 
   return (
-    <header>
+    <header style={{ marginTop: '78px' }}>
       <Navbar
         collapseOnSelect
         fixed="top"
@@ -38,7 +32,7 @@ function Header() {
                     as={Button}
                     variant="danger"
                     className="text-light px-3"
-                    onClick={handleLogout}>
+                    onClick={logoutUser}>
                     <FaSignOutAlt /> Logout
                   </Nav.Link>
                 </Nav.Item>
