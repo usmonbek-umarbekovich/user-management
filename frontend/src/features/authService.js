@@ -5,7 +5,9 @@ const API_URL = '/api/users';
 const register = makeRequest('register');
 const login = makeRequest('login');
 
-const logout = () => {};
+const logout = async () => {
+  await axios.post(`${API_URL}/logout`);
+};
 
 function makeRequest(endpoint) {
   return async userData => {
