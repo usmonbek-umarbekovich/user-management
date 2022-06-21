@@ -1,7 +1,9 @@
 const express = require('express');
 const {
+  getUsers,
   registerUser,
   loginUser,
+  logoutUser,
   blockUser,
   unblockUser,
   deleteUser,
@@ -12,8 +14,10 @@ const router = express.Router();
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/logout', logoutUser);
+router.get('/', protect, getUsers);
 router.delete('/:id', protect, deleteUser);
-router.put('/block/:id', protect, blockUser);
-router.put('/unblock/:id', protect, unblockUser);
+router.put('/block', protect, blockUser);
+router.put('/unblock', protect, unblockUser);
 
 module.exports = router;
