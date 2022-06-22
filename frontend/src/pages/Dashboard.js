@@ -186,8 +186,18 @@ function Dashboard() {
               <td>{user._id}</td>
               <td>{user.name}</td>
               <td>{user.email}</td>
-              <td>{user.lastLogin}</td>
-              <td>{user.registrationTime}</td>
+              <td>
+                {new Intl.DateTimeFormat([], {
+                  dateStyle: 'long',
+                  timeStyle: 'short',
+                }).format(new Date(user.lastLogin))}
+              </td>
+              <td>
+                {new Intl.DateTimeFormat([], {
+                  dateStyle: 'long',
+                  timeStyle: 'short',
+                }).format(new Date(user.registrationTime))}
+              </td>
               <td>{user.status}</td>
             </tr>
           ))}
