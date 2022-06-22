@@ -12,17 +12,18 @@ export function useUserInfo() {
 
 export default function UserInfoProvider({ children }) {
   const [user, setUser] = useLocalStorage('user', null);
-  const [response, setResponse] = useState({
-    isError: false,
-    message: '',
-  });
+  const [error, setError] = useState('');
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (response.isError) toast.error(response.message);
+    if (error) toast.error(error);
     if (user) navigate('/');
-  }, [response, user, navigate]);
+
+    return () => {
+      setError('');
+    };
+  }, [user, navigate, error]);
 
   const logoutUser = () => {
     authService.logout();
@@ -41,10 +42,7 @@ export default function UserInfoProvider({ children }) {
 
   function parseData(data) {
     if (data.user) setUser(data.user);
-    else {
-      const { isError, message } = data;
-      setResponse({ isError, message });
-    }
+    else setError(data.error);
   }
 
   const value = {

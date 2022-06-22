@@ -15,16 +15,14 @@ function makeRequest(endpoint) {
       const response = await axios.post(`${API_URL}/${endpoint}`, userData);
       return {
         user: response.data,
-        isError: false,
-        message: '',
+        error: '',
       };
     } catch (error) {
       const errorMessage = error?.response?.data?.message;
       const message = errorMessage || error.message || error.toString();
       return {
         user: null,
-        isError: true,
-        message,
+        error: message,
       };
     }
   };
