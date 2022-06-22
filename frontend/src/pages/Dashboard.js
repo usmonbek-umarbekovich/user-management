@@ -85,6 +85,7 @@ function Dashboard() {
         u.selected = false;
         u.status = status;
       });
+      selectAllRef.current.indeterminate = false;
       selectAllRef.current.checked = false;
       setSelectedUsers(_ => []);
       setIsLoading(_ => false);
@@ -104,6 +105,7 @@ function Dashboard() {
 
       // reset
       selectAllRef.current.checked = false;
+      selectAllRef.current.indeterminate = false;
       setUsers(prevUsers => prevUsers.filter(u => !u.selected));
       setSelectedUsers([]);
       setIsLoading(false);
