@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
+import Spinner from 'react-bootstrap/Spinner';
 import { useUserInfo } from '../contexts/userInfoContext';
 
 function Register() {
@@ -9,6 +10,7 @@ function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const { registerUser } = useUserInfo();
 
@@ -17,7 +19,8 @@ function Register() {
     const form = e.currentTarget;
 
     if (form.checkValidity()) {
-      registerUser({ name, email, password });
+      setIsLoading(true);
+      registerUser({ name, email, password }).then(() => setIsLoading(false));
     }
     setValidated(true);
   };
@@ -69,8 +72,22 @@ function Register() {
             Please provide a valid password
           </Form.Control.Feedback>
         </Form.Group>
-        <Button type="submit" className="w-100" size="lg">
-          Sign Up
+        <Button type="submit" className="w-100" size="lg" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Spinner
+                as="span"
+                animation="grow"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+                className="me-1"
+              />
+              Signing Up
+            </>
+          ) : (
+            'Sign Up'
+          )}
         </Button>
       </Form>
     </Container>

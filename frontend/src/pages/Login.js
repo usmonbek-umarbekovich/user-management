@@ -2,12 +2,14 @@ import { useState } from 'react';
 import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
+import Spinner from 'react-bootstrap/Spinner';
 import { useUserInfo } from '../contexts/userInfoContext';
 
 function Login() {
   const [validated, setValidated] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const { loginUser } = useUserInfo();
 
@@ -16,7 +18,8 @@ function Login() {
     const form = e.currentTarget;
 
     if (form.checkValidity()) {
-      loginUser({ email, password });
+      setIsLoading(true);
+      loginUser({ email, password }).then(() => setIsLoading(false));
     }
     setValidated(true);
   };
@@ -54,8 +57,27 @@ function Login() {
             Please provide a valid password
           </Form.Control.Feedback>
         </Form.Group>
-        <Button type="submit" className="w-100" size="lg" variant="dark">
-          Login
+        <Button
+          type="submit"
+          className="w-100"
+          size="lg"
+          variant="dark"
+          disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Spinner
+                as="span"
+                animation="grow"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+                className="me-1"
+              />
+              Logging In
+            </>
+          ) : (
+            'Login'
+          )}
         </Button>
       </Form>
     </Container>

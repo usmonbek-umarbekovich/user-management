@@ -7,11 +7,13 @@ import Table from 'react-bootstrap/Table';
 import Form from 'react-bootstrap/Form';
 import Stack from 'react-bootstrap/Stack';
 import Button from 'react-bootstrap/Button';
+import Spinner from 'react-bootstrap/Spinner';
 import { FaUnlockAlt, FaTrashAlt } from 'react-icons/fa';
 
 function Dashboard() {
   const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const selectAllRef = useRef();
 
   const { user: me, logoutUser } = useUserInfo();
@@ -20,10 +22,12 @@ function Dashboard() {
   useEffect(() => {
     if (me == null) navigate('/login');
     else {
+      setIsLoading(true);
       adminService.getUsers().then(data => {
         data.unshift({ ...me, selected: false });
         data.forEach(u => (u.selected = false));
         setUsers(data);
+        setIsLoading(false);
       });
     }
   }, [me, navigate]);
@@ -48,6 +52,8 @@ function Dashboard() {
   };
 
   const handleStatus = status => {
+    setIsLoading(true);
+
     // block/unblock selected users
     adminService.changeStatus(status, selectedUsers).then(() => {
       if (status === 'blocked' && selectedUsers.find(u => u._id === me._id)) {
@@ -61,11 +67,14 @@ function Dashboard() {
         u.status = status;
       });
       selectAllRef.current.checked = false;
-      setSelectedUsers([]);
+      setSelectedUsers(_ => []);
+      setIsLoading(_ => false);
     });
   };
 
   const handleDelete = () => {
+    setIsLoading(true);
+
     // delete selected users
     adminService.deleteUsers(selectedUsers).then(() => {
       if (selectedUsers.find(u => u._id === me._id)) {
@@ -77,6 +86,7 @@ function Dashboard() {
       selectAllRef.current.checked = false;
       setUsers(prevUsers => prevUsers.filter(u => !u.selected));
       setSelectedUsers([]);
+      setIsLoading(false);
     });
   };
 
@@ -84,6 +94,18 @@ function Dashboard() {
 
   return (
     <>
+      {isLoading ? (
+        <div className="overlay position-fixed w-100 h-100 bg-opacity-25 bg-black d-flex">
+          <Spinner
+            animation="grow"
+            role="status"
+            variant="primary"
+            className="m-auto"
+            style={{ width: '5rem', height: '5rem' }}>
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        </div>
+      ) : null}
       <Stack direction="horizontal" gap={4} className="align-items-center p-2">
         <Button
           variant="danger"
