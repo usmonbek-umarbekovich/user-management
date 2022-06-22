@@ -9,6 +9,10 @@ const logout = async () => {
   await axios.post(`${API_URL}/logout`);
 };
 
+/**
+ * @desc Helper function to send post requestes
+ *       for blocking / unblocking users
+ */
 function makeRequest(endpoint) {
   return async userData => {
     try {

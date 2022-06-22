@@ -12,9 +12,12 @@ const protect = require('./middlewares/authMiddleware');
 
 const router = express.Router();
 
+// public routes
 router.post('/register', registerUser);
 router.post('/login', loginUser);
-router.post('/logout', logoutUser);
+
+// protected routes
+router.post('/logout', protect, logoutUser);
 router.get('/', protect, getUsers);
 router.delete('/delete', protect, deleteUsers);
 router.put('/block', protect, blockUsers);

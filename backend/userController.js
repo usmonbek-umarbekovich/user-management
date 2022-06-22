@@ -2,16 +2,13 @@ const asyncHandler = require('express-async-handler');
 const bcrypt = require('bcryptjs');
 const User = require('./userModel');
 
-// @desc Register new user
-// @route POST /api/users/register
-// @access Public
+/**
+ * @desc Register new user
+ * @route POST /api/users/register
+ * @access Public
+ */
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
-
-  if (!(name && email && password)) {
-    res.status(400);
-    throw new Error('All the fields are required');
-  }
 
   const userExists = await User.findOne({ email });
   if (userExists) {
@@ -51,13 +48,16 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc Login user
-// @route POST /api/users/login
-// @access Public
+/**
+ * @desc Login user
+ * @route POST /api/users/login
+ * @access Public
+ */
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
 
+  // compare plain password against hashed one
   if (user && (await bcrypt.compare(password, user.password))) {
     if (user.status === 'blocked') {
       res.status(401);
@@ -87,15 +87,22 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * @desc Logout user
+ * @route POST /api/users/logout
+ * @access Private
+ */
 const logoutUser = asyncHandler(async (req, res) => {
   req.session.destroy(err => {
     if (err) throw new Error(err);
   });
 });
 
-// @desc Get the list of users
-// @route GET /api/users
-// @access Private
+/**
+ * @desc Get the list of users
+ * @route GET /api/users
+ * @access Private
+ */
 const getUsers = asyncHandler(async (req, res) => {
   const users = await User.where('_id')
     .ne(req.session.user._id)
@@ -103,19 +110,25 @@ const getUsers = asyncHandler(async (req, res) => {
   res.status(200).json(users);
 });
 
-// @desc Block users
-// @route PUT /api/users/block
-// @access Private
+/**
+ * @desc Block users
+ * @route PUT /api/users/block
+ * @access Private
+ */
 const blockUsers = changeStatus('blocked');
 
-// @desc Unblock users
-// @route PUT /api/users/unblock
-// @access Private
+/**
+ * @desc Unblock users
+ * @route PUT /api/users/unblock
+ * @access Private
+ */
 const unblockUsers = changeStatus('active');
 
-// @desc Delete users
-// @route DELETE /api/users/delete
-// @access Private
+/**
+ * @desc Delete users
+ * @route DELETE /api/users/delete
+ * @access Private
+ */
 const deleteUsers = asyncHandler(async (req, res) => {
   const { selectedUsers } = req.body;
   const selectedIds = selectedUsers.map(user => user._id);
@@ -123,7 +136,9 @@ const deleteUsers = asyncHandler(async (req, res) => {
   res.status(200).json(report);
 });
 
-// helpers
+/**
+ * @desc Helper function for blocking or unblocking users
+ */
 function changeStatus(status) {
   return asyncHandler(async (req, res) => {
     const { selectedUsers } = req.body;

@@ -32,6 +32,7 @@ function Dashboard() {
     }
   }, [me, navigate]);
 
+  // handling checkbox states
   const handleChange = (e, user) => {
     if (user === null) {
       users.forEach(u => {
@@ -79,6 +80,7 @@ function Dashboard() {
         return;
       }
 
+      // reset
       selectedUsers.forEach(u => {
         u.selected = false;
         u.status = status;
@@ -100,6 +102,7 @@ function Dashboard() {
         return;
       }
 
+      // reset
       selectAllRef.current.checked = false;
       setUsers(prevUsers => prevUsers.filter(u => !u.selected));
       setSelectedUsers([]);
@@ -111,6 +114,7 @@ function Dashboard() {
 
   return (
     <>
+      {/* Show Spinner while loading data */}
       {isLoading ? (
         <div className="overlay position-fixed w-100 h-100 bg-opacity-25 bg-black d-flex">
           <Spinner
@@ -123,6 +127,7 @@ function Dashboard() {
           </Spinner>
         </div>
       ) : null}
+      {/* Buttons for BLOCK, UNBLOCK & DELETE users */}
       <Stack direction="horizontal" gap={4} className="align-items-center p-2">
         <Button
           variant="danger"
@@ -143,6 +148,7 @@ function Dashboard() {
           <FaTrashAlt />
         </Button>
       </Stack>
+      {/* List of users in the database */}
       <Table bordered hover responsive variant="dark">
         <thead>
           <tr>
