@@ -48,10 +48,12 @@ function Dashboard() {
   };
 
   const handleStatus = status => {
+    // block/unblock selected users
     adminService.changeStatus(status, selectedUsers).then(() => {
       if (status === 'blocked' && selectedUsers.find(u => u._id === me._id)) {
         logoutUser();
         toast.info('You have been blocked');
+        return;
       }
 
       selectedUsers.forEach(u => {
@@ -59,6 +61,21 @@ function Dashboard() {
         u.status = status;
       });
       selectAllRef.current.checked = false;
+      setSelectedUsers([]);
+    });
+  };
+
+  const handleDelete = () => {
+    // delete selected users
+    adminService.deleteUsers(selectedUsers).then(() => {
+      if (selectedUsers.find(u => u._id === me._id)) {
+        logoutUser();
+        toast.error('You have been deleted from the database');
+        return;
+      }
+
+      selectAllRef.current.checked = false;
+      setUsers(prevUsers => prevUsers.filter(u => !u.selected));
       setSelectedUsers([]);
     });
   };
@@ -80,7 +97,10 @@ function Dashboard() {
           onClick={() => handleStatus('active')}>
           <FaUnlockAlt />
         </Button>
-        <Button variant="outline-danger" disabled={selectedUsers.length === 0}>
+        <Button
+          variant="outline-danger"
+          disabled={selectedUsers.length === 0}
+          onClick={handleDelete}>
           <FaTrashAlt />
         </Button>
       </Stack>

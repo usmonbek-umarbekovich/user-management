@@ -60,7 +60,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   if (user && (await bcrypt.compare(password, user.password))) {
     if (user.status === 'blocked') {
-      res.status(400);
+      res.status(401);
       throw new Error('Sorry, You are blocked');
     }
 
@@ -106,37 +106,29 @@ const getUsers = asyncHandler(async (req, res) => {
 // @desc Block users
 // @route PUT /api/users/block
 // @access Private
-const blockUser = changeStatus('blocked');
+const blockUsers = changeStatus('blocked');
 
 // @desc Unblock users
 // @route PUT /api/users/unblock
 // @access Private
-const unblockUser = changeStatus('active');
+const unblockUsers = changeStatus('active');
 
-// @desc Delete user
-// @route DELETE /api/users/:id
+// @desc Delete users
+// @route DELETE /api/users/delete
 // @access Private
-const deleteUser = asyncHandler(async (req, res) => {
-  const user = User.findById(req.params.id);
-  if (!user) {
-    res.status(400);
-    throw new Error('User not found');
-  }
-
-  if (user.id === req.session.user.id) {
-    logoutUser();
-  }
-  await user.remove();
-  res.status(200).json({ id: req.params.id });
+const deleteUsers = asyncHandler(async (req, res) => {
+  const { selectedUsers } = req.body;
+  const selectedIds = selectedUsers.map(user => user._id);
+  const report = await User.deleteMany({ _id: selectedIds });
+  res.status(200).json(report);
 });
 
 // helpers
 function changeStatus(status) {
   return asyncHandler(async (req, res) => {
     const { selectedUsers } = req.body;
-    selectedIds = selectedUsers.map(user => user._id);
+    const selectedIds = selectedUsers.map(user => user._id);
     const report = await User.updateMany({ _id: selectedIds }, { status });
-
     res.status(200).json(report);
   });
 }
@@ -146,7 +138,7 @@ module.exports = {
   registerUser,
   loginUser,
   logoutUser,
-  blockUser,
-  unblockUser,
-  deleteUser,
+  blockUsers,
+  unblockUsers,
+  deleteUsers,
 };

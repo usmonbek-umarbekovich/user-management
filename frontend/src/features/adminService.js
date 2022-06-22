@@ -12,7 +12,9 @@ const changeStatus = async (status, selectedUsers) => {
   await axios.put(`${API_URL}/${endpoint}`, { selectedUsers });
 };
 
-const deleteUsers = async () => {};
+const deleteUsers = async selectedUsers => {
+  await axios.delete(`${API_URL}/delete`, { data: { selectedUsers } });
+};
 
 const adminService = {
   getUsers,

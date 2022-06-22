@@ -4,9 +4,9 @@ const {
   registerUser,
   loginUser,
   logoutUser,
-  blockUser,
-  unblockUser,
-  deleteUser,
+  blockUsers,
+  unblockUsers,
+  deleteUsers,
 } = require('./userController');
 const protect = require('./middlewares/authMiddleware');
 
@@ -16,8 +16,8 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/logout', logoutUser);
 router.get('/', protect, getUsers);
-router.delete('/:id', protect, deleteUser);
-router.put('/block', protect, blockUser);
-router.put('/unblock', protect, unblockUser);
+router.delete('/delete', protect, deleteUsers);
+router.put('/block', protect, blockUsers);
+router.put('/unblock', protect, unblockUsers);
 
 module.exports = router;
