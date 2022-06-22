@@ -45,9 +45,26 @@ function Dashboard() {
 
     user.selected = e.target.checked;
     setSelectedUsers(prevUsers => {
-      if (user.selected) return [...prevUsers, user];
+      // update selected users array
+      let newUsers;
+      if (user.selected) {
+        newUsers = [...prevUsers, user];
+      } else {
+        newUsers = prevUsers.filter(u => u._id !== user._id);
+      }
 
-      return prevUsers.filter(u => u._id !== user._id);
+      // handle "select all" checkbox state
+      if (newUsers.length > 0 && newUsers.length < users.length) {
+        selectAllRef.current.indeterminate = true;
+      } else {
+        selectAllRef.current.indeterminate = false;
+
+        if (newUsers.length === users.length) {
+          selectAllRef.current.checked = true;
+        }
+      }
+
+      return newUsers;
     });
   };
 
