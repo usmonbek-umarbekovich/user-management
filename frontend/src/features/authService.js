@@ -6,7 +6,11 @@ const register = makeRequest('register');
 const login = makeRequest('login');
 
 const logout = async () => {
-  await axios.post(`${API_URL}/logout`);
+  try {
+    await axios.post(`${API_URL}/logout`);
+  } catch (error) {
+    return error.response;
+  }
 };
 
 /**
@@ -16,18 +20,9 @@ const logout = async () => {
 function makeRequest(endpoint) {
   return async userData => {
     try {
-      const response = await axios.post(`${API_URL}/${endpoint}`, userData);
-      return {
-        user: response.data,
-        error: '',
-      };
+      return await axios.post(`${API_URL}/${endpoint}`, userData);
     } catch (error) {
-      const errorMessage = error?.response?.data?.message;
-      const message = errorMessage || error.message || error.toString();
-      return {
-        user: null,
-        error: message,
-      };
+      return error.response;
     }
   };
 }

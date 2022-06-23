@@ -31,18 +31,18 @@ export default function UserInfoProvider({ children }) {
   };
 
   const loginUser = async userData => {
-    const data = await authService.login(userData);
-    parseData(data);
+    const response = await authService.login(userData);
+    parseData(response);
   };
 
   const registerUser = async userData => {
-    const data = await authService.register(userData);
-    parseData(data);
+    const response = await authService.register(userData);
+    parseData(response);
   };
 
-  function parseData(data) {
-    if (data.user) setUser(data.user);
-    else setError(data.error);
+  function parseData(response) {
+    if (response.statusText === 'OK') setUser(response.data);
+    else setError(response.data.message);
   }
 
   const value = {

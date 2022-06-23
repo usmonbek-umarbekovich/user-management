@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useUserInfo } from '../contexts/userInfoContext';
@@ -14,23 +14,46 @@ function Dashboard() {
   const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const selectAllRef = useRef();
 
   const { user: me, logoutUser } = useUserInfo();
   const navigate = useNavigate();
 
+  const getUsers = useCallback(async () => {
+    setIsLoading(true);
+
+    const response = await adminService.getUsers();
+    switch (response.statusText) {
+      case 'OK': {
+        response.data.unshift({ ...me, selected: false });
+        response.data.forEach(u => (u.selected = false));
+        setUsers(response.data);
+        break;
+      }
+      case 'Unauthorized': {
+        setError('You are not authorized to view this page');
+        break;
+      }
+      default: {
+        toast.error('Something went wrong. Try loging in again');
+        break;
+      }
+    }
+    setIsLoading(false);
+  }, [me]);
+
   useEffect(() => {
     if (me == null) navigate('/login');
-    else {
-      setIsLoading(true);
-      adminService.getUsers().then(data => {
-        data.unshift({ ...me, selected: false });
-        data.forEach(u => (u.selected = false));
-        setUsers(data);
-        setIsLoading(false);
-      });
-    }
-  }, [me, navigate]);
+    else if (error) {
+      logoutUser();
+      toast.error(error);
+    } else getUsers();
+
+    return () => {
+      setError('');
+    };
+  }, [me, navigate, getUsers, error, logoutUser]);
 
   // handling checkbox states
   const handleChange = (e, user) => {
@@ -73,43 +96,48 @@ function Dashboard() {
     setIsLoading(true);
 
     // block/unblock selected users
-    adminService.changeStatus(status, selectedUsers).then(() => {
-      if (status === 'blocked' && selectedUsers.find(u => u._id === me._id)) {
-        logoutUser();
-        toast.info('You have been blocked');
-        return;
-      }
+    adminService
+      .changeStatus(status, selectedUsers)
+      .then(() => {
+        if (status === 'blocked' && selectedUsers.find(u => u._id === me._id)) {
+          setError('You have been blocked');
+          return;
+        }
 
-      // reset
-      selectedUsers.forEach(u => {
-        u.selected = false;
-        u.status = status;
-      });
-      selectAllRef.current.indeterminate = false;
-      selectAllRef.current.checked = false;
-      setSelectedUsers(_ => []);
-      setIsLoading(_ => false);
-    });
+        // reset
+        selectedUsers.forEach(u => {
+          u.selected = false;
+          u.status = status;
+        });
+        selectAllRef.current.indeterminate = false;
+        selectAllRef.current.checked = false;
+        setSelectedUsers([]);
+      })
+      .catch(err => toast.error(err))
+      .finally(() => setIsLoading(false));
   };
 
   const handleDelete = () => {
     setIsLoading(true);
 
     // delete selected users
-    adminService.deleteUsers(selectedUsers).then(() => {
-      if (selectedUsers.find(u => u._id === me._id)) {
-        logoutUser();
-        toast.error('You have been deleted from the database');
-        return;
-      }
+    adminService
+      .deleteUsers(selectedUsers)
+      .then(() => {
+        if (selectedUsers.find(u => u._id === me._id)) {
+          logoutUser();
+          toast.error('You have been deleted from the database');
+          return;
+        }
 
-      // reset
-      selectAllRef.current.checked = false;
-      selectAllRef.current.indeterminate = false;
-      setUsers(prevUsers => prevUsers.filter(u => !u.selected));
-      setSelectedUsers([]);
-      setIsLoading(false);
-    });
+        // reset
+        selectAllRef.current.checked = false;
+        selectAllRef.current.indeterminate = false;
+        setUsers(prevUsers => prevUsers.filter(u => !u.selected));
+        setSelectedUsers([]);
+      })
+      .catch(err => toast.error(err))
+      .finally(() => setIsLoading(false));
   };
 
   const formatTime = rawTime => {

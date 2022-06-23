@@ -3,17 +3,32 @@ import axios from 'axios';
 const API_URL = '/api/users';
 
 const getUsers = async () => {
-  const response = await axios.get(`${API_URL}`);
-  return response.data;
+  try {
+    return await axios.get(`${API_URL}`);
+  } catch (error) {
+    return error.response;
+  }
 };
 
 const changeStatus = async (status, selectedUsers) => {
-  const endpoint = status === 'blocked' ? 'block' : 'unblock';
-  await axios.put(`${API_URL}/${endpoint}`, { selectedUsers });
+  try {
+    const endpoint = status === 'blocked' ? 'block' : 'unblock';
+    return await axios.put(`${API_URL}/${endpoint}`, {
+      selectedUsers,
+    });
+  } catch (error) {
+    return error.response;
+  }
 };
 
 const deleteUsers = async selectedUsers => {
-  await axios.delete(`${API_URL}/delete`, { data: { selectedUsers } });
+  try {
+    return await axios.delete(`${API_URL}/delete`, {
+      data: { selectedUsers },
+    });
+  } catch (error) {
+    return error.response;
+  }
 };
 
 const adminService = {
