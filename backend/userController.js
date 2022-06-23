@@ -55,7 +55,7 @@ const registerUser = asyncHandler(async (req, res) => {
  */
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email });
+  let user = await User.findOne({ email });
 
   // compare plain password against hashed one
   if (user && (await bcrypt.compare(password, user.password))) {
@@ -64,7 +64,11 @@ const loginUser = asyncHandler(async (req, res) => {
       throw new Error('Sorry, You are blocked');
     }
 
-    await User.findByIdAndUpdate(user.id, { lastLogin: Date.now() });
+    user = await User.findByIdAndUpdate(
+      user.id,
+      { lastLogin: Date.now() },
+      { new: true }
+    );
 
     // save user to the session and send data
     req.session.regenerate(err => {
