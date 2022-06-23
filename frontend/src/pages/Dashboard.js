@@ -112,6 +112,15 @@ function Dashboard() {
     });
   };
 
+  const formatTime = rawTime => {
+    const parsed = new Date(rawTime);
+    const intl = new Intl.DateTimeFormat([], {
+      dateStyle: 'medium',
+      timeStyle: 'medium',
+    });
+    return intl.format(parsed);
+  };
+
   if (me == null) return null;
 
   return (
@@ -186,18 +195,8 @@ function Dashboard() {
               <td>{user._id}</td>
               <td>{user.name}</td>
               <td>{user.email}</td>
-              <td>
-                {new Intl.DateTimeFormat([], {
-                  dateStyle: 'long',
-                  timeStyle: 'short',
-                }).format(new Date(user.lastLogin))}
-              </td>
-              <td>
-                {new Intl.DateTimeFormat([], {
-                  dateStyle: 'long',
-                  timeStyle: 'short',
-                }).format(new Date(user.registrationTime))}
-              </td>
+              <td>{formatTime(user.lastLogin)}</td>
+              <td>{formatTime(user.registrationTime)}</td>
               <td>{user.status}</td>
             </tr>
           ))}
