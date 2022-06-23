@@ -1,12 +1,13 @@
 const express = require('express');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const path = require('path');
 const connectDB = require('./db');
 require('dotenv').config();
 
 const port = process.env.PORT || 5000;
 
-connectDB();
+const clientPromise = connectDB().then(m => m.connection.getClient());
 
 const app = express();
 
@@ -18,6 +19,13 @@ app.use(
     saveUninitialized: false,
     secret: process.env.SESSION_SECRET,
     name: 'task-4',
+    store: MongoStore.create({
+      clientPromise,
+      stringify: false,
+      autoRemove: 'disabled',
+      ttl: 30 * 24 * 60 * 60, // 30 days
+      touchAfter: 24 * 3600, // 24 hours
+    }),
   })
 );
 
@@ -32,8 +40,6 @@ if (process.env.NODE_ENV === 'production') {
       path.resolve(__dirname, '../', 'frontend', 'build', 'index.html')
     )
   );
-} else {
-  app.get('/', (req, res) => res.send('Please set NODE_ENV to production'));
 }
 
 app.use(require('./middlewares/errorHandler'));
