@@ -23,7 +23,7 @@ export default function UserInfoProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://usmonbek-admin-panel.herokuapp.com');
+    const ws = new WebSocket('wss://usmonbek-admin-panel.herokuapp.com');
     ws.onopen = () => setSocket(ws);
     ws.onerror = function () {
       toast.error('WebSocket error');
