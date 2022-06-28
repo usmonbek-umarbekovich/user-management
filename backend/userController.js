@@ -31,21 +31,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error('Invalid user data');
   }
 
-  // save user to the session and send data
-  req.session.regenerate(err => {
-    if (err) throw new Error(err);
-
-    req.session.user = {
-      _id: user.id,
-      name: user.name,
-      email: user.email,
-      status: user.status,
-      lastLogin: user.lastLogin,
-      registrationTime: user.registrationTime,
-    };
-
-    res.status(200).json(req.session.user);
-  });
+  saveAndSendUser(req, res, user);
 });
 
 /**
@@ -54,7 +40,20 @@ const registerUser = asyncHandler(async (req, res) => {
  * @access Public
  */
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, inSession } = req.body;
+  if (inSession) {
+    if (!req.session.user) res.status(200).json(null);
+    else {
+      const user = await User.findByIdAndUpdate(
+        req.session.user._id,
+        { lastLogin: Date.now() },
+        { new: true }
+      );
+      req.session.user.lastLogin = user.lastLogin;
+    }
+    return;
+  }
+
   let user = await User.findOne({ email });
 
   // compare plain password against hashed one
@@ -70,21 +69,7 @@ const loginUser = asyncHandler(async (req, res) => {
       { new: true }
     );
 
-    // save user to the session and send data
-    req.session.regenerate(err => {
-      if (err) throw new Error(err);
-
-      req.session.user = {
-        _id: user.id,
-        name: user.name,
-        email: user.email,
-        status: user.status,
-        lastLogin: user.lastLogin,
-        registrationTime: user.registrationTime,
-      };
-
-      res.status(200).json(req.session.user);
-    });
+    saveAndSendUser(req, res, user);
   } else {
     res.status(400);
     throw new Error('Invalid credentials');
@@ -110,7 +95,8 @@ const logoutUser = asyncHandler(async (req, res) => {
 const getUsers = asyncHandler(async (req, res) => {
   const users = await User.where('_id')
     .ne(req.session.user._id)
-    .select('_id name email status registrationTime lastLogin');
+    .select('_id name email status registrationTime lastLogin')
+    .sort({ lastLogin: 'descending' });
   res.status(200).json(users);
 });
 
@@ -148,7 +134,36 @@ function changeStatus(status) {
     const { selectedUsers } = req.body;
     const selectedIds = selectedUsers.map(user => user._id);
     const report = await User.updateMany({ _id: selectedIds }, { status });
+
+    if (status === 'blocked') {
+      const sessions = await req.sessionStore.collectionP;
+      await sessions.deleteMany({
+        'session.user._id': { $in: selectedIds },
+      });
+    }
+
     res.status(200).json(report);
+  });
+}
+
+/**
+ * @desc Helper function for saving user to session
+ */
+function saveAndSendUser(req, res, user) {
+  // save user to the session and send data
+  req.session.regenerate(err => {
+    if (err) throw new Error(err);
+
+    req.session.user = {
+      _id: user.id,
+      name: user.name,
+      email: user.email,
+      status: user.status,
+      lastLogin: user.lastLogin,
+      registrationTime: user.registrationTime,
+    };
+
+    res.status(200).json(req.session.user);
   });
 }
 

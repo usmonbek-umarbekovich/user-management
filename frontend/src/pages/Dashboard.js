@@ -11,19 +11,20 @@ import Spinner from 'react-bootstrap/Spinner';
 import { FaUnlockAlt, FaTrashAlt } from 'react-icons/fa';
 
 function Dashboard() {
-  const [users, setUsers] = useState([]);
+  const { user: me, setUser: updateMe, logoutUser, socket } = useUserInfo();
+  const navigate = useNavigate();
+
+  const [users, setUsers] = useState([{ ...me, selected: false }]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const selectAllRef = useRef();
-
-  const { user: me, logoutUser } = useUserInfo();
-  const navigate = useNavigate();
 
   const getUsers = useCallback(async () => {
     setIsLoading(true);
 
     const response = await adminService.getUsers();
+    if (!response) return;
+
     switch (response.statusText) {
       case 'OK': {
         response.data.unshift({ ...me, selected: false });
@@ -32,7 +33,7 @@ function Dashboard() {
         break;
       }
       case 'Unauthorized': {
-        setError('You are not authorized to view this page');
+        toast.error('You are not authorized to view that page');
         break;
       }
       default: {
@@ -43,17 +44,86 @@ function Dashboard() {
     setIsLoading(false);
   }, [me]);
 
+  const handleMessage = useCallback(
+    e => {
+      const change = JSON.parse(e.data);
+      const userId = change.documentKey._id;
+      if (change.operationType === 'update') {
+        const { updateDescription: desc } = change;
+
+        // see if the current user is blocked
+        if (
+          userId === users[0]._id &&
+          desc.updatedFields.status === 'blocked'
+        ) {
+          toast.error('You have been blocked');
+          logoutUser();
+          return;
+        }
+
+        // set the updated fields
+        setUsers(prevUsers => {
+          const newUsers = [...prevUsers];
+          newUsers.forEach(u => {
+            if (u._id === userId) {
+              Object.entries(desc.updatedFields).forEach(([key, value]) => {
+                u[key] = value;
+              });
+            }
+          });
+          return [
+            newUsers[0],
+            ...newUsers
+              .slice(1)
+              .sort((u1, u2) => u2.lastLogin.localeCompare(u1.lastLogin)),
+          ];
+        });
+        if (userId === users[0]._id) updateMe(users[0]);
+        return;
+      }
+
+      if (change.operationType === 'delete') {
+        if (userId === users[0]._id) {
+          toast.error('You have been deleted from the database');
+          logoutUser();
+          navigate('/register');
+          return;
+        }
+
+        setUsers(prevUsers => prevUsers.filter(u => u._id !== userId));
+        return;
+      }
+
+      if (change.operationType === 'insert') {
+        const newUser = change.fullDocument;
+        setUsers(prevUsers => [
+          prevUsers[0],
+          {
+            _id: newUser._id,
+            name: newUser.name,
+            email: newUser.email,
+            lastLogin: newUser.lastLogin,
+            registrationTime: newUser.registrationTime,
+            status: newUser.status,
+          },
+          ...prevUsers.slice(1),
+        ]);
+      }
+    },
+    [users, updateMe, logoutUser, navigate]
+  );
+
   useEffect(() => {
     if (me == null) navigate('/login');
-    else if (error) {
-      logoutUser();
-      toast.error(error);
-    } else getUsers();
+    else getUsers();
+  }, [me, navigate, getUsers]);
 
-    return () => {
-      setError('');
-    };
-  }, [me, navigate, getUsers, error, logoutUser]);
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.addEventListener('message', handleMessage);
+    return () => socket.removeEventListener('message', handleMessage);
+  }, [socket, handleMessage]);
 
   // handling checkbox states
   const handleChange = (e, user) => {
@@ -98,46 +168,25 @@ function Dashboard() {
     // block/unblock selected users
     adminService
       .changeStatus(status, selectedUsers)
-      .then(() => {
-        if (status === 'blocked' && selectedUsers.find(u => u._id === me._id)) {
-          setError('You have been blocked');
-          return;
-        }
-
-        // reset
-        selectedUsers.forEach(u => {
-          u.selected = false;
-          u.status = status;
-        });
-        selectAllRef.current.indeterminate = false;
-        selectAllRef.current.checked = false;
-        setSelectedUsers([]);
-      })
+      .then(() => reset())
       .catch(err => toast.error(err))
       .finally(() => setIsLoading(false));
   };
 
   const handleDelete = () => {
     setIsLoading(true);
-
-    // delete selected users
     adminService
       .deleteUsers(selectedUsers)
-      .then(() => {
-        if (selectedUsers.find(u => u._id === me._id)) {
-          logoutUser();
-          toast.error('You have been deleted from the database');
-          return;
-        }
-
-        // reset
-        selectAllRef.current.checked = false;
-        selectAllRef.current.indeterminate = false;
-        setUsers(prevUsers => prevUsers.filter(u => !u.selected));
-        setSelectedUsers([]);
-      })
+      .then(() => reset())
       .catch(err => toast.error(err))
       .finally(() => setIsLoading(false));
+  };
+
+  const reset = () => {
+    selectedUsers.forEach(u => (u.selected = false));
+    selectAllRef.current.indeterminate = false;
+    selectAllRef.current.checked = false;
+    setSelectedUsers([]);
   };
 
   const formatTime = rawTime => {

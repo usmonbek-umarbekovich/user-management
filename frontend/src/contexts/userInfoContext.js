@@ -11,10 +11,24 @@ export function useUserInfo() {
 }
 
 export default function UserInfoProvider({ children }) {
-  const [user, setUser] = useLocalStorage('user', null);
-  const [error, setError] = useState('');
+  const [user, setUser] = useLocalStorage('user', () => null);
+  const [error, setError] = useState(() => '');
+  const [socket, setSocket] = useState();
 
   const navigate = useNavigate();
+
+  // see if there is a user in the session
+  useEffect(() => {
+    authService.login({ inSession: true });
+  }, []);
+
+  useEffect(() => {
+    const ws = new WebSocket('ws://usmonbek-admin-panel.herokuapp.com');
+    ws.onopen = () => setSocket(ws);
+    ws.onerror = function () {
+      toast.error('WebSocket error');
+    };
+  }, []);
 
   useEffect(() => {
     if (error) toast.error(error);
@@ -23,9 +37,10 @@ export default function UserInfoProvider({ children }) {
     return () => {
       setError('');
     };
-  }, [user, navigate, error]);
+  }, [user, navigate, error, socket]);
 
   const logoutUser = () => {
+    socket.close();
     authService.logout();
     setUser(null);
   };
@@ -47,6 +62,8 @@ export default function UserInfoProvider({ children }) {
 
   const value = {
     user,
+    setUser,
+    socket,
     loginUser,
     registerUser,
     logoutUser,

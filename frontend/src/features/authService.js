@@ -14,8 +14,7 @@ const logout = async () => {
 };
 
 /**
- * @desc Helper function to send post requestes
- *       for blocking / unblocking users
+ * @desc Helper function for login and signup
  */
 function makeRequest(endpoint) {
   return async userData => {

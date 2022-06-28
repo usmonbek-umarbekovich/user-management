@@ -2,9 +2,16 @@ import axios from 'axios';
 
 const API_URL = '/api/users';
 
+let controller;
+
 const getUsers = async () => {
   try {
-    return await axios.get(`${API_URL}`);
+    if (controller) controller.abort();
+
+    controller = new AbortController();
+    return await axios.get(`${API_URL}`, {
+      signal: controller.signal,
+    });
   } catch (error) {
     return error.response;
   }
