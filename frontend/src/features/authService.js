@@ -13,13 +13,19 @@ const logout = async () => {
   }
 };
 
+let controller;
 /**
  * @desc Helper function for login and signup
  */
 function makeRequest(endpoint) {
   return async userData => {
     try {
-      return await axios.post(`${API_URL}/${endpoint}`, userData);
+      if (controller) controller.abort();
+
+      controller = new AbortController();
+      return await axios.post(`${API_URL}/${endpoint}`, userData, {
+        signal: controller.signal,
+      });
     } catch (error) {
       return error.response;
     }
