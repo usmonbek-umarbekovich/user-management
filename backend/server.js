@@ -8,7 +8,7 @@ const http = require('http');
 const connectDB = require('./db');
 require('dotenv').config();
 
-const port = process.env.PORT || 5000;
+const port = 5000;
 
 // Connecting to the database
 const clientPromise = connectDB().then(mongo => {

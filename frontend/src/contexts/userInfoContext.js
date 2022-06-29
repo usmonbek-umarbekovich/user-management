@@ -18,10 +18,7 @@ export default function UserInfoProvider({ children }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('ENVIRONMENT VARIABLES');
-    console.log(process.env);
-    console.log('ENVIRONMENT VARIABLES');
-    const ws = new WebSocket('wss://usmonbek-admin-panel.herokuapp.com');
+    const ws = new WebSocket('wss://usmonbek-admin-panel.herokuapp.com:5000');
     ws.onopen = () => setSocket(ws);
     ws.onerror = function () {
       toast.error('WebSocket error');
