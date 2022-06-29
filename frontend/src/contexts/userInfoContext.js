@@ -18,7 +18,7 @@ export default function UserInfoProvider({ children }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const ws = new WebSocket('wss://usmonbek-admin-panel.herokuapp.com:5000');
+    const ws = new WebSocket('wss://usmonbek-admin-panel.herokuapp.com');
     ws.onopen = () => setSocket(ws);
     ws.onerror = function () {
       toast.error('WebSocket error');
