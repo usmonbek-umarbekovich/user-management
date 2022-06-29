@@ -14,7 +14,7 @@ function Dashboard() {
   const { user: me, logoutUser, socket } = useUserInfo();
   const navigate = useNavigate();
 
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState([{ ...me, selected: false }]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const selectAllRef = useRef();

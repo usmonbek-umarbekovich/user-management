@@ -26,12 +26,14 @@ export default function UserInfoProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    const ws = new WebSocket('wss://usmonbek-admin-panel.herokuapp.com');
+    if (!user) return;
+
+    const ws = new WebSocket('ws://localhost:5000');
     ws.onopen = () => setSocket(ws);
     ws.onerror = function () {
       toast.error('WebSocket error');
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (error) toast.error(error);
@@ -46,6 +48,7 @@ export default function UserInfoProvider({ children }) {
     socket.close();
     authService.logout();
     setUser(null);
+    setSocket(null);
   };
 
   const loginUser = async userData => {
