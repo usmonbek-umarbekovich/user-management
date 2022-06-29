@@ -17,18 +17,21 @@ export default function UserInfoProvider({ children }) {
 
   const navigate = useNavigate();
 
-  // see if there is a user in the session
   useEffect(() => {
-    authService.login({ inSession: true });
-  }, []);
-
-  useEffect(() => {
+    console.log('ENVIRONMENT VARIABLES');
+    console.log(process.env);
+    console.log('ENVIRONMENT VARIABLES');
     const ws = new WebSocket('wss://usmonbek-admin-panel.herokuapp.com');
     ws.onopen = () => setSocket(ws);
     ws.onerror = function () {
       toast.error('WebSocket error');
     };
   }, []);
+
+  // see if there is a user in the session
+  useEffect(() => {
+    authService.login({ inSession: true });
+  }, [socket]);
 
   useEffect(() => {
     if (error) toast.error(error);
