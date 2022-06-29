@@ -50,6 +50,7 @@ const loginUser = asyncHandler(async (req, res) => {
         { new: true }
       );
       req.session.user.lastLogin = user.lastLogin;
+      res.status(200).json(user);
     }
     return;
   }
