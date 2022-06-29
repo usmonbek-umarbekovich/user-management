@@ -17,6 +17,14 @@ export default function UserInfoProvider({ children }) {
 
   const navigate = useNavigate();
 
+  // see if there is a user in the session
+  useEffect(() => {
+    authService.login({ inSession: true }).then(response => {
+      if (response.data) setUser(response.data);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const ws = new WebSocket('wss://usmonbek-admin-panel.herokuapp.com');
     ws.onopen = () => setSocket(ws);
@@ -24,11 +32,6 @@ export default function UserInfoProvider({ children }) {
       toast.error('WebSocket error');
     };
   }, []);
-
-  // see if there is a user in the session
-  useEffect(() => {
-    authService.login({ inSession: true });
-  }, [socket]);
 
   useEffect(() => {
     if (error) toast.error(error);
@@ -62,7 +65,6 @@ export default function UserInfoProvider({ children }) {
 
   const value = {
     user,
-    setUser,
     socket,
     loginUser,
     registerUser,

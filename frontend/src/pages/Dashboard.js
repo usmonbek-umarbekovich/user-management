@@ -11,10 +11,10 @@ import Spinner from 'react-bootstrap/Spinner';
 import { FaUnlockAlt, FaTrashAlt } from 'react-icons/fa';
 
 function Dashboard() {
-  const { user: me, setUser: updateMe, logoutUser, socket } = useUserInfo();
+  const { user: me, logoutUser, socket } = useUserInfo();
   const navigate = useNavigate();
 
-  const [users, setUsers] = useState([{ ...me, selected: false }]);
+  const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const selectAllRef = useRef();
@@ -53,8 +53,8 @@ function Dashboard() {
 
         // see if the current user is blocked
         if (
-          userId === users[0]._id &&
-          desc.updatedFields.status === 'blocked'
+          desc.updatedFields.status === 'blocked' &&
+          userId === users[0]._id
         ) {
           toast.error('You have been blocked');
           logoutUser();
@@ -78,7 +78,6 @@ function Dashboard() {
               .sort((u1, u2) => u2.lastLogin.localeCompare(u1.lastLogin)),
           ];
         });
-        if (userId === users[0]._id) updateMe(users[0]);
         return;
       }
 
@@ -110,7 +109,7 @@ function Dashboard() {
         ]);
       }
     },
-    [users, updateMe, logoutUser, navigate]
+    [users, logoutUser, navigate]
   );
 
   useEffect(() => {
