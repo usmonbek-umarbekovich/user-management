@@ -34,6 +34,7 @@ function Dashboard() {
       }
       case 'Unauthorized': {
         toast.error('You are not authorized to view that page');
+        logoutUser();
         break;
       }
       default: {
@@ -42,7 +43,7 @@ function Dashboard() {
       }
     }
     setIsLoading(false);
-  }, [me]);
+  }, [me, logoutUser]);
 
   const handleMessage = useCallback(
     e => {
